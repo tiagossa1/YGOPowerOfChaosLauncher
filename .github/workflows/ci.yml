@@ -40,7 +40,7 @@ jobs:
         run: python -m pip install -r ModTools/dev-requirements.txt
 
       - name: Lint
-        run: python -m ruff check ModTools/launcher.py ModTools/test_launcher_quality.py
+        run: python -m ruff check ModTools
 
       - name: Run unit and UI tests
         if: ${{ !cancelled() }}

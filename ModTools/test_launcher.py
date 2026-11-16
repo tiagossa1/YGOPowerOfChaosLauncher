@@ -1,7 +1,6 @@
-import json
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import launcher
@@ -24,18 +23,18 @@ class LauncherTests(unittest.TestCase):
     def test_missing_windows_setting_uses_fallback(self):
         self.assertEqual(launcher.windows_value('Software\\LegendRebornMissingTestKey', 'Missing', 123), 123)
 
-    def test_command_targets_modified_game_and_only_selected_flags(self):
-        root = Path('C:/Games/Legend Reborn')
-        self.assertEqual(launcher.command(root, launcher.DEFAULTS),
-                         [str(root / launcher.GAME), '-win', '-nosound'])
-        self.assertEqual(launcher.command(root, dict(windowed=False, mute=False, fast=True)),
-                         [str(root / launcher.GAME), '-speedy'])
+    def test_command_targets_selected_game_and_only_selected_flags(self):
+        executable = Path('C:/Games/Yugi/yugi_pc.exe')
+        self.assertEqual(launcher.command(executable, launcher.DEFAULTS),
+                         [str(executable), '-win', '-nosound'])
+        self.assertEqual(launcher.command(executable, {'windowed': False, 'mute': False, 'fast': True}),
+                         [str(executable), '-speedy'])
 
     def test_preferences_round_trip_without_touching_game_config(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'launcher.json'
             self.assertEqual(launcher.load_settings(path), launcher.DEFAULTS)
-            settings = dict(windowed=False, mute=False, fast=True)
+            settings = {**launcher.DEFAULTS, 'windowed': False, 'mute': False, 'fast': True}
             launcher.save_settings(path, settings)
             self.assertEqual(launcher.load_settings(path), settings)
             self.assertFalse((path.parent / 'reborn.ini').exists())

@@ -41,19 +41,19 @@ jobs:
         run: python -m pip install -r ModTools/dev-requirements.txt
 
       - name: Lint
-        run: python -m ruff check ModTools/launcher.py ModTools/test_launcher_quality.py
+        run: python -m ruff check ModTools
 
       - name: Run unit and UI tests
         run: python -m pytest ModTools -q --junitxml=test-results/pytest.xml
 
       - name: Build executable
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --collect-all customtkinter --name "Legend Reborn Launcher" ModTools/launcher.py
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --collect-all customtkinter --name "Yu-Gi-Oh! Power of Chaos Launcher" ModTools/launcher.py
 
       - name: Package launcher
         run: |
           $ErrorActionPreference = 'Stop'
           New-Item -ItemType Directory -Path package, release | Out-Null
-          Copy-Item -LiteralPath 'dist/Legend Reborn Launcher.exe' -Destination package
+          Copy-Item -LiteralPath 'dist/Yu-Gi-Oh! Power of Chaos Launcher.exe' -Destination package
           Copy-Item -LiteralPath README.md -Destination package
           $archive = 'release/YGOPowerOfChaosLauncher-windows-x64.zip'
           Compress-Archive -Path 'package/*' -DestinationPath $archive

@@ -3,9 +3,8 @@
 ## Scope
 
 Build a small Windows launcher for Yu-Gi-Oh! Power of Chaos and community mods.
-Universal compatibility is the goal, not an implemented feature. The current
-launcher targets `Yugi Reborn - Skip Intro.exe`. Do not claim support for other
-editions without testing them.
+Users select and save the game executable through Browse. Compatibility testing
+has focused on Legend Reborn; do not claim verified support for other editions.
 
 ## Structure
 
@@ -26,10 +25,15 @@ editions without testing them.
 - Keep JSON writes atomic and clean up temporary files after failures.
 - Show actionable errors; do not launch after a settings-save failure.
 - Launch with an argument list, without a shell, using the game folder as `cwd`.
-- In packaged builds, resolve the game beside the launcher executable. Source mode
-  resolves it relative to the repository root.
-- Skip intro uses `[Options] SkipIntro` in `reborn.ini`; it requires a compatible
-  patched game. Do not force `-skipintro` or present it as universally supported.
+- Store the selected absolute game path in `launcher.json`, beside the packaged
+  launcher or in the repository root in source mode. Use the selected game's
+  directory for game-specific settings and the process working directory.
+- Store Skip Intro in JSON and pass `-skipintro` only for confirmed compatible
+  executable profiles. Never read or write `reborn.ini`.
+- Validate PE structure and reject DLLs and the launcher itself at Browse and Play.
+  Unknown SHA-256 digests require confirmation and gain no edition-specific features.
+- Keep executable SHA-256 profiles in `ModTools/compatibility.py`. Disc-image
+  checksums are reference data only; never treat them as executable identities.
 - Do not patch game binaries as part of the launcher.
 - Do not add game binaries, assets, saves, personal settings, secrets, or local
   absolute paths to tracked files.
@@ -45,7 +49,7 @@ Run from the repository root with Python 3.14 and uv:
 
 ```powershell
 python -m uv run --no-project --with pytest --with customtkinter==6.0.0 pytest ModTools -q
-python -m uv run --no-project --with ruff ruff check ModTools/launcher.py ModTools/test_launcher_quality.py
+python -m uv run --no-project --with ruff ruff check ModTools
 ```
 
 Run the full suite before claiming success. Report failures and untested behavior.
@@ -57,11 +61,10 @@ Install dependencies into a dedicated environment:
 
 ```powershell
 python -m pip install -r ModTools/launcher-requirements.txt
-python -m PyInstaller --onefile --windowed --collect-all customtkinter --name "Legend Reborn Launcher" ModTools/launcher.py
+python -m PyInstaller --onefile --windowed --collect-all customtkinter --name "Yu-Gi-Oh! Power of Chaos Launcher" ModTools/launcher.py
 ```
 
-Build output belongs in `dist/`, not version control. The current build name is
-intentional until application naming is generalized. Update the README when
+Build output belongs in `dist/`, not version control. Update the README when
 compatibility, configuration, commands, or packaging change.
 
 ## Git

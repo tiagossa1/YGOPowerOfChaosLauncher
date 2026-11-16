@@ -98,17 +98,39 @@ looks for the game beside its own executable.
 
 ### Tests and linting
 
-With [uv](https://docs.astral.sh/uv/) installed:
+Install the pinned development dependencies to use the same tool versions as CI:
 
 ```powershell
-python -m uv run --no-project --with pytest --with customtkinter==6.0.0 pytest ModTools -q
-python -m uv run --no-project --with ruff ruff check ModTools/launcher.py ModTools/test_launcher_quality.py
+python -m pip install -r ModTools/dev-requirements.txt
+python -m pytest ModTools -q
+python -m ruff check ModTools/launcher.py ModTools/test_launcher_quality.py
 ```
 
 Tests cover argument combinations, saved settings, intro preferences, color
 contrast, and errors when selecting Play. They use temporary settings and mock
 process creation, so the real game stays closed. UI tests open Tk windows and
 need a Windows desktop session.
+
+GitHub Actions runs these checks on Windows with Python 3.14 for pull requests
+and pushes to `main`. You can also start the workflow manually. Test reports are
+available as workflow artifacts for seven days.
+
+### Automated builds and releases
+
+The **Build Windows launcher** workflow runs manually or when launcher code,
+dependencies, the README, or its build workflow changes on `main`. It runs tests
+and linting before packaging the executable and README into a Windows x64 ZIP.
+The ZIP and its SHA-256 checksum are available as workflow artifacts for 14 days.
+Builds are unsigned and do not include game files or personal settings.
+
+Pushing a tag beginning with `v`, such as `v0.1.0`, starts the **Draft release**
+workflow. It reuses the tested Windows build, verifies the archive checksum, and
+creates a draft GitHub release with the ZIP, checksum, and generated release notes.
+Review the draft and document compatibility limits before publishing it manually.
+Tags should identify reviewed commits; the workflow builds the tagged revision.
+
+Rerunning a completed release will not overwrite an existing release. Manage an
+existing draft in GitHub rather than deleting and recreating its tag.
 
 ## Roadmap
 

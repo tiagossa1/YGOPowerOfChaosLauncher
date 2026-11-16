@@ -1,0 +1,47 @@
+name: Draft release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    permissions:
+      contents: read
+
+  release:
+    name: Create draft release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Download tested package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: launcher-windows-x64
+          path: release
+
+      - name: Verify package checksum
+        working-directory: release
+        run: sha256sum --check SHA256SUMS.txt
+
+      - name: Create draft with release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            release/YGOPowerOfChaosLauncher-windows-x64.zip \
+            release/SHA256SUMS.txt \
+            --verify-tag --draft --generate-notes --title "$RELEASE_TAG"

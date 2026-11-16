@@ -60,6 +60,29 @@ def test_failed_save_preserves_preferences_and_removes_temporary_file(tmp_path, 
     assert list(tmp_path.iterdir()) == [path]
 
 
+def test_failed_temporary_file_close_removes_temporary_file(tmp_path, monkeypatch):
+    path = tmp_path / 'launcher.json'
+    path.write_text('{"mute": false}', encoding='utf-8')
+    real_temporary_file = launcher.NamedTemporaryFile
+
+    class FailingClose:
+        def __init__(self, *args, **kwargs):
+            self.handle = real_temporary_file(*args, **kwargs)
+
+        def __enter__(self):
+            return self.handle
+
+        def __exit__(self, *args):
+            self.handle.close()
+            raise OSError('Could not flush settings')
+
+    monkeypatch.setattr(launcher, 'NamedTemporaryFile', FailingClose)
+    with pytest.raises(OSError, match='Could not flush settings'):
+        launcher.save_settings(path, launcher.DEFAULTS)
+    assert path.read_text(encoding='utf-8') == '{"mute": false}'
+    assert list(tmp_path.iterdir()) == [path]
+
+
 def test_browse_updates_game_hides_intro_and_leaves_unknown_ini_untouched(tmp_path, monkeypatch):
     import customtkinter as ctk
 

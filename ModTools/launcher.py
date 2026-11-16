@@ -123,19 +123,16 @@ def load_settings(path):
 
 
 def save_settings(path, settings):
-    with NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent,
-                            prefix='launcher-', suffix='.tmp', delete=False) as handle:
-        temporary = Path(handle.name)
-        try:
-            handle.write(json.dumps(settings, indent=2) + '\n')
-        except BaseException:
-            handle.close()
-            temporary.unlink(missing_ok=True)
-            raise
+    temporary = None
     try:
+        with NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent,
+                                prefix='launcher-', suffix='.tmp', delete=False) as handle:
+            temporary = Path(handle.name)
+            handle.write(json.dumps(settings, indent=2) + '\n')
         temporary.replace(path)
     finally:
-        temporary.unlink(missing_ok=True)
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def main():
